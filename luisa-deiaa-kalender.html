@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Luisa & Deiaa – Kalender</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a32;
+    --accent: #c9a96e;
+    --accent2: #e8c99a;
+    --luisa: #b07bb0;
+    --deiaa: #6ea8c9;
+    --shared: #c9a96e;
+    --text: #e8e6e0;
+    --text-muted: #6e6e80;
+    --text-dim: #3a3a48;
+    --danger: #c96e6e;
+    --success: #6ec98a;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Background grain texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* USER SELECTOR */
+  #user-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .user-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px;
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .user-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 56px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .user-card {
+    width: 100%;
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .user-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 2px;
+  }
+
+  .user-card.luisa::before { background: var(--luisa); }
+  .user-card.deiaa::before { background: var(--deiaa); }
+
+  .user-card:hover, .user-card:active {
+    background: var(--surface2);
+    transform: translateY(-2px);
+    border-color: var(--border);
+  }
+
+  .user-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    flex-shrink: 0;
+  }
+
+  .luisa .user-avatar { background: rgba(176,123,176,0.15); color: var(--luisa); }
+  .deiaa .user-avatar { background: rgba(110,168,201,0.15); color: var(--deiaa); }
+
+  .user-info-name {
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .user-info-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* MAIN APP */
+  #app { display: none; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+  #app.visible { display: flex; }
+
+  /* HEADER */
+  .header {
+    padding: 52px 24px 20px;
+    position: relative;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .header-greeting {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .header-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .header-name span {
+    color: var(--accent);
+  }
+
+  .header-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+
+  .header-avatar:hover { opacity: 0.8; }
+  .header-avatar.luisa { background: rgba(176,123,176,0.2); color: var(--luisa); }
+  .header-avatar.deiaa { background: rgba(110,168,201,0.2); color: var(--deiaa); }
+
+  /* WEEK NAVIGATION */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    margin-bottom: 20px;
+  }
+
+  .week-nav-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .week-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .week-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* WEEK DAYS */
+  .week-strip {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 0 20px;
+    margin-bottom: 28px;
+  }
+
+  .day-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 8px 4px;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .day-cell:hover { background: var(--surface); }
+
+  .day-name {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .day-num {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+
+  .day-cell.today .day-num {
+    background: var(--accent);
+    color: #0d0d0f;
+    font-weight: 500;
+  }
+
+  .day-cell.selected .day-num {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+
+  .day-dots {
+    display: flex;
+    gap: 3px;
+    height: 6px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .day-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    padding: 0 20px 100px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .selected-date-display {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--accent);
+  }
+
+  /* APPOINTMENT CARDS */
+  .appt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .appt-card:hover { border-color: var(--border); transform: translateY(-1px); }
+  .appt-card:active { transform: translateY(0); }
+
+  .appt-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .appt-card.luisa::before { background: var(--luisa); }
+  .appt-card.deiaa::before { background: var(--deiaa); }
+  .appt-card.shared::before { background: var(--shared); }
+
+  .appt-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .appt-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+    flex: 1;
+    margin-right: 12px;
+  }
+
+  .appt-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  .appt-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .appt-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-luisa { background: rgba(176,123,176,0.15); color: var(--luisa); }
+  .badge-deiaa { background: rgba(110,168,201,0.15); color: var(--deiaa); }
+  .badge-shared { background: rgba(201,169,110,0.15); color: var(--shared); }
+
+  .appt-status {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .status-pending { background: rgba(201,169,110,0.1); color: var(--accent); border: 1px solid rgba(201,169,110,0.3); }
+  .status-accepted { background: rgba(110,201,138,0.1); color: var(--success); }
+  .status-declined { background: rgba(201,110,110,0.1); color: var(--danger); }
+
+  /* ACCEPT/DECLINE ACTIONS */
+  .appt-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-accept, .btn-decline, .btn-edit {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-accept {
+    background: rgba(110,201,138,0.15);
+    color: var(--success);
+    border: 1px solid rgba(110,201,138,0.3);
+  }
+
+  .btn-decline {
+    background: rgba(201,110,110,0.1);
+    color: var(--danger);
+    border: 1px solid rgba(201,110,110,0.2);
+  }
+
+  .btn-edit {
+    background: var(--surface2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    flex: 0 0 auto;
+    padding: 10px 14px;
+  }
+
+  .btn-accept:hover { background: rgba(110,201,138,0.25); }
+  .btn-decline:hover { background: rgba(201,110,110,0.2); }
+  .btn-edit:hover { color: var(--text); border-color: var(--text-muted); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 88px;
+    right: 24px;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #0d0d0f;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 32px rgba(201,169,110,0.35);
+    transition: all 0.25s ease;
+    z-index: 50;
+  }
+
+  .fab:hover { transform: scale(1.08); box-shadow: 0 12px 40px rgba(201,169,110,0.45); }
+  .fab:active { transform: scale(0.96); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: rgba(13,13,15,0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 12px 0 24px;
+    z-index: 40;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--text-dim);
+    transition: color 0.2s;
+  }
+
+  .nav-item.active { color: var(--accent); }
+  .nav-item:hover { color: var(--text-muted); }
+
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 10px; letter-spacing: 0.06em; font-weight: 500; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 16px;
+    padding: 0 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* NOTIFICATION BADGE */
+  .notif-badge {
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 16px; height: 16px;
+    background: var(--danger);
+    border-radius: 50%;
+    font-size: 9px;
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+    border-top: 1px solid var(--border);
+    animation: slideUp 0.3s ease;
+  }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .type-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .type-btn {
+    padding: 12px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .type-btn.active-luisa { background: rgba(176,123,176,0.2); border-color: var(--luisa); color: var(--luisa); }
+  .type-btn.active-deiaa { background: rgba(110,168,201,0.2); border-color: var(--deiaa); color: var(--deiaa); }
+  .type-btn.active-shared { background: rgba(201,169,110,0.2); border-color: var(--shared); color: var(--shared); }
+
+  .btn-save {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #0d0d0f;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-save:hover { opacity: 0.9; }
+
+  .btn-cancel {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: color 0.2s;
+  }
+
+  .btn-cancel:hover { color: var(--text); }
+
+  /* NOTIFICATIONS VIEW */
+  .notif-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+  }
+
+  .notif-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .notif-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .notif-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .notif-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* VIEW PANELS */
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- USER SELECTION SCREEN -->
+<div id="user-screen">
+  <div class="user-title">Luisa & Deiaa</div>
+  <div class="user-subtitle">Wer bist du?</div>
+
+  <div class="user-card luisa" onclick="selectUser('luisa')">
+    <div class="user-avatar">L</div>
+    <div>
+      <div class="user-info-name">Luisa</div>
+      <div class="user-info-sub">Luisas Kalender öffnen</div>
+    </div>
+  </div>
+
+  <div class="user-card deiaa" onclick="selectUser('deiaa')">
+    <div class="user-avatar">D</div>
+    <div>
+      <div class="user-info-name">Deiaa</div>
+      <div class="user-info-sub">Deiaas Kalender öffnen</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-greeting">Willkommen zurück</div>
+        <div class="header-name" id="header-name">–</div>
+      </div>
+      <div class="header-avatar" id="header-avatar" onclick="switchUser()"></div>
+    </div>
+  </div>
+
+  <!-- WEEK NAVIGATION -->
+  <div class="week-nav">
+    <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+    <div class="week-label" id="week-label">–</div>
+    <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
+  </div>
+
+  <!-- WEEK STRIP -->
+  <div class="week-strip" id="week-strip"></div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--luisa)"></div>Luisa</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--deiaa)"></div>Deiaa</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--shared)"></div>Beide</div>
+  </div>
+
+  <!-- CONTENT VIEWS -->
+  <div class="content">
+
+    <!-- KALENDER VIEW -->
+    <div class="view-panel active" id="view-calendar">
+      <div class="section-header">
+        <div class="section-title">Termine</div>
+        <div class="selected-date-display" id="selected-date-display">–</div>
+      </div>
+      <div id="appointments-list"></div>
+    </div>
+
+    <!-- NOTIFICATIONS VIEW -->
+    <div class="view-panel" id="view-notifs">
+      <div class="section-header">
+        <div class="section-title">Benachrichtigungen</div>
+      </div>
+      <div id="notifs-list"></div>
+    </div>
+
+    <!-- ALL APPOINTMENTS VIEW -->
+    <div class="view-panel" id="view-all">
+      <div class="section-header">
+        <div class="section-title">Alle Termine</div>
+      </div>
+      <div id="all-list"></div>
+    </div>
+
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openAddModal()">+</button>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchView('calendar', this)">
+      <div class="nav-icon">📅</div>
+      <div class="nav-label">Kalender</div>
+    </div>
+    <div class="nav-item" onclick="switchView('all', this)" style="position:relative">
+      <div class="nav-icon">📋</div>
+      <div class="nav-label">Alle</div>
+    </div>
+    <div class="nav-item" onclick="switchView('notifs', this)" style="position:relative" id="nav-notifs">
+      <div class="nav-icon">🔔</div>
+      <div class="nav-label">Info</div>
+      <div class="notif-badge" id="notif-count" style="display:none">0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Neuer Termin</div>
+
+    <div class="form-group">
+      <label class="form-label">Titel</label>
+      <input class="form-input" id="f-title" type="text" placeholder="z.B. Arzttermin, Kino…">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input class="form-input" id="f-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Uhrzeit</label>
+        <input class="form-input" id="f-time" type="time">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Für wen?</label>
+      <div class="type-toggle">
+        <button class="type-btn active-luisa" id="tb-luisa" onclick="setType('luisa')">Luisa</button>
+        <button class="type-btn" id="tb-deiaa" onclick="setType('deiaa')">Deiaa</button>
+        <button class="type-btn" id="tb-shared" onclick="setType('shared')">Beide</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Notiz (optional)</label>
+      <input class="form-input" id="f-note" type="text" placeholder="Kurze Notiz…">
+    </div>
+
+    <button class="btn-save" onclick="saveAppointment()">Speichern</button>
+    <button class="btn-cancel" onclick="closeModalDirect()">Abbrechen</button>
+  </div>
+</div>
+
+<script>
+// ── DATA STORE ────────────────────────────────────────────────────────────────
+let currentUser = null;
+let selectedDate = new Date();
+let currentWeekOffset = 0;
+let editingId = null;
+let selectedType = 'luisa';
+
+const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+// Sample appointments pre-loaded
+let appointments = JSON.parse(localStorage.getItem('ludi-appointments') || 'null') || [
+  { id: 1, title: 'Arzttermin', date: todayStr(0), time: '10:00', type: 'luisa', note: '', status: 'accepted', createdBy: 'luisa' },
+  { id: 2, title: 'Kinoabend 🎬', date: todayStr(2), time: '19:30', type: 'shared', note: 'Action Film', status: 'pending', createdBy: 'luisa' },
+  { id: 3, title: 'Fußball Training', date: todayStr(1), time: '18:00', type: 'deiaa', note: '', status: 'accepted', createdBy: 'deiaa' },
+  { id: 4, title: 'Dinner Reservation', date: todayStr(4), time: '20:00', type: 'shared', note: 'Restaurant Bella', status: 'pending', createdBy: 'deiaa' },
+];
+
+let notifications = JSON.parse(localStorage.getItem('ludi-notifs') || 'null') || [];
+
+function todayStr(offsetDays = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d.toISOString().split('T')[0];
+}
+
+function saveData() {
+  localStorage.setItem('ludi-appointments', JSON.stringify(appointments));
+  localStorage.setItem('ludi-notifs', JSON.stringify(notifications));
+}
+
+// ── USER SELECT ───────────────────────────────────────────────────────────────
+function selectUser(user) {
+  currentUser = user;
+  document.getElementById('user-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+
+  const av = document.getElementById('header-avatar');
+  av.className = 'header-avatar ' + user;
+  av.textContent = user === 'luisa' ? 'L' : 'D';
+
+  const hn = document.getElementById('header-name');
+  const other = user === 'luisa' ? 'Deiaa' : 'Luisa';
+  hn.innerHTML = (user === 'luisa' ? 'Luisa' : 'Deiaa') + ' <span>& ' + other + '</span>';
+
+  selectedType = user;
+  updateTypeButtons();
+  renderWeek();
+  renderAppointments();
+  renderNotifBadge();
+}
+
+function switchUser() {
+  currentUser = null;
+  document.getElementById('user-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+}
+
+// ── WEEK ──────────────────────────────────────────────────────────────────────
+function getWeekStart(offset = 0) {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + 1 + (offset * 7); // Mon-start
+  const d = new Date(now);
+  d.setDate(diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function changeWeek(dir) {
+  currentWeekOffset += dir;
+  renderWeek();
+  renderAppointments();
+}
+
+function renderWeek() {
+  const ws = getWeekStart(currentWeekOffset);
+  const we = new Date(ws);
+  we.setDate(we.getDate() + 6);
+  document.getElementById('week-label').textContent =
+    ws.getDate() + '. ' + MONTHS[ws.getMonth()].slice(0,3) + ' – ' +
+    we.getDate() + '. ' + MONTHS[we.getMonth()].slice(0,3);
+
+  const strip = document.getElementById('week-strip');
+  strip.innerHTML = '';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws);
+    d.setDate(d.getDate() + i);
+    const dStr = d.toISOString().split('T')[0];
+    const isToday = d.getTime() === today.getTime();
+    const isSelected = dStr === selectedDate.toISOString().split('T')[0];
+
+    const dayAppts = appointments.filter(a => a.date === dStr);
+    const dots = [...new Set(dayAppts.map(a => a.type))];
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+    cell.innerHTML = `
+      <div class="day-name">${DAYS[d.getDay()]}</div>
+      <div class="day-num">${d.getDate()}</div>
+      <div class="day-dots">
+        ${dots.map(t => `<div class="day-dot" style="background:var(--${t})"></div>`).join('')}
+      </div>
+    `;
+    cell.onclick = () => selectDay(d);
+    strip.appendChild(cell);
+  }
+}
+
+function selectDay(d) {
+  selectedDate = d;
+  renderWeek();
+  renderAppointments();
+  switchView('calendar', document.querySelector('.nav-item'));
+}
+
+// ── APPOINTMENTS ──────────────────────────────────────────────────────────────
+function renderAppointments() {
+  const dStr = selectedDate.toISOString().split('T')[0];
+  const display = document.getElementById('selected-date-display');
+  display.textContent = selectedDate.getDate() + '. ' + MONTHS[selectedDate.getMonth()];
+
+  const list = document.getElementById('appointments-list');
+  const dayAppts = appointments
+    .filter(a => a.date === dStr)
+    .sort((a,b) => (a.time||'').localeCompare(b.time||''));
+
+  if (!dayAppts.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Keine Termine für diesen Tag</div></div>`;
+    return;
+  }
+
+  list.innerHTML = dayAppts.map(a => apptCardHTML(a)).join('');
+  renderAllList();
+}
+
+function apptCardHTML(a) {
+  const isPending = a.type === 'shared' && a.status === 'pending' && a.createdBy !== currentUser;
+  const statusBadge = a.type === 'shared'
+    ? `<span class="appt-status status-${a.status}">${a.status === 'pending' ? 'Ausstehend' : a.status === 'accepted' ? '✓ Bestätigt' : '✕ Abgelehnt'}</span>`
+    : '';
+
+  const actions = isPending ? `
+    <div class="appt-actions">
+      <button class="btn-accept" onclick="respondAppt(${a.id},'accepted')">✓ Annehmen</button>
+      <button class="btn-decline" onclick="respondAppt(${a.id},'declined')">✕ Ablehnen</button>
+      <button class="btn-edit" onclick="editAppt(${a.id})">✏️</button>
+    </div>
+  ` : `
+    <div class="appt-actions" style="justify-content:flex-end">
+      <button class="btn-edit" onclick="editAppt(${a.id})">✏️ Bearbeiten</button>
+      <button class="btn-edit" onclick="deleteAppt(${a.id})" style="color:var(--danger);border-color:rgba(201,110,110,0.3)">🗑</button>
+    </div>
+  `;
+
+  return `
+    <div class="appt-card ${a.type}" id="card-${a.id}">
+      <div class="appt-top">
+        <div>
+          <div class="appt-title">${a.title}</div>
+          ${a.note ? `<div class="appt-time" style="margin-top:2px;font-style:italic">${a.note}</div>` : ''}
+        </div>
+        <div class="appt-time">${a.time || ''}</div>
+      </div>
+      <div class="appt-meta">
+        <span class="appt-badge badge-${a.type}">${a.type === 'shared' ? 'Beide' : a.type === 'luisa' ? 'Luisa' : 'Deiaa'}</span>
+        ${statusBadge}
+      </div>
+      ${actions}
+    </div>
+  `;
+}
+
+function renderAllList() {
+  const list = document.getElementById('all-list');
+  const sorted = [...appointments].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Noch keine Termine</div></div>`;
+    return;
+  }
+  list.innerHTML = sorted.map(a => {
+    const d = new Date(a.date);
+    const dateLabel = d.getDate() + '. ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    return `<div style="margin-bottom:4px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;margin-top:16px;letter-spacing:0.08em;text-transform:uppercase">${dateLabel}</div>
+      ${apptCardHTML(a)}
+    </div>`;
+  }).join('');
+}
+
+function respondAppt(id, status) {
+  const a = appointments.find(x => x.id === id);
+  if (!a) return;
+  a.status = status;
+  const msg = status === 'accepted'
+    ? `${currentUser === 'luisa' ? 'Luisa' : 'Deiaa'} hat „${a.title}" angenommen.`
+    : `${currentUser === 'luisa' ? 'Luisa' : 'Deiaa'} hat „${a.title}" abgelehnt.`;
+  addNotif(msg);
+  saveData();
+  renderAppointments();
+  renderNotifBadge();
+}
+
+function deleteAppt(id) {
+  appointments = appointments.filter(x => x.id !== id);
+  saveData();
+  renderAppointments();
+  renderWeek();
+}
+
+function addNotif(msg) {
+  notifications.unshift({ msg, time: new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}), read: false });
+  saveData();
+  renderNotifBadge();
+  renderNotifsList();
+}
+
+function renderNotifBadge() {
+  const unread = notifications.filter(n => !n.read).length;
+  const badge = document.getElementById('notif-count');
+  if (unread > 0) {
+    badge.textContent = unread;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderNotifsList() {
+  const list = document.getElementById('notifs-list');
+  if (!notifications.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">Keine neuen Benachrichtigungen</div></div>`;
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item">
+      <div class="notif-header">
+        <div class="notif-dot" style="background:${n.read ? 'var(--border)' : 'var(--accent)'}"></div>
+        <div class="notif-text">${n.msg}</div>
+      </div>
+      <div class="notif-time">Heute, ${n.time}</div>
+    </div>
+  `).join('');
+  notifications.forEach(n => n.read = true);
+  saveData();
+  renderNotifBadge();
+}
+
+// ── ADD/EDIT MODAL ────────────────────────────────────────────────────────────
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Neuer Termin';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-date').value = selectedDate.toISOString().split('T')[0];
+  document.getElementById('f-time').value = '';
+  document.getElementById('f-note').value = '';
+  selectedType = currentUser;
+  updateTypeButtons();
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function editAppt(id) {
+  const a = appointments.find(x => x.id === id);
+  if (!a) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Termin bearbeiten';
+  document.getElementById('f-title').value = a.title;
+  document.getElementById('f-date').value = a.date;
+  document.getElementById('f-time').value = a.time || '';
+  document.getElementById('f-note').value = a.note || '';
+  selectedType = a.type;
+  updateTypeButtons();
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function setType(t) {
+  selectedType = t;
+  updateTypeButtons();
+}
+
+function updateTypeButtons() {
+  ['luisa','deiaa','shared'].forEach(t => {
+    const btn = document.getElementById('tb-' + t);
+    btn.className = 'type-btn' + (selectedType === t ? ' active-' + t : '');
+  });
+}
+
+function saveAppointment() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { document.getElementById('f-title').focus(); return; }
+
+  if (editingId) {
+    const a = appointments.find(x => x.id === editingId);
+    const oldDate = a.date;
+    a.title = title;
+    a.date = document.getElementById('f-date').value;
+    a.time = document.getElementById('f-time').value;
+    a.type = selectedType;
+    a.note = document.getElementById('f-note').value.trim();
+    if (a.date !== oldDate && a.type === 'shared') a.status = 'pending';
+    addNotif(`Termin „${title}" wurde aktualisiert.`);
+  } else {
+    const newAppt = {
+      id: Date.now(),
+      title,
+      date: document.getElementById('f-date').value,
+      time: document.getElementById('f-time').value,
+      type: selectedType,
+      note: document.getElementById('f-note').value.trim(),
+      status: selectedType === 'shared' ? 'pending' : 'accepted',
+      createdBy: currentUser
+    };
+    appointments.push(newAppt);
+    if (selectedType === 'shared') {
+      addNotif(`${currentUser === 'luisa' ? 'Luisa' : 'Deiaa'} hat einen gemeinsamen Termin erstellt: „${title}".`);
+    }
+  }
+
+  saveData();
+  closeModalDirect();
+  renderWeek();
+  renderAppointments();
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal').style.display = 'none';
+  editingId = null;
+}
+
+// ── VIEW SWITCH ───────────────────────────────────────────────────────────────
+function switchView(view, el) {
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+
+  const navItems = document.querySelectorAll('.nav-item');
+  const viewMap = { calendar: 0, all: 1, notifs: 2 };
+  if (navItems[viewMap[view]]) navItems[viewMap[view]].classList.add('active');
+
+  if (view === 'notifs') renderNotifsList();
+  if (view === 'all') renderAllList();
+  if (view === 'calendar') renderAppointments();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+selectedDate = new Date();
+selectedDate.setHours(0,0,0,0);
+</script>
+</body>
+</html>
